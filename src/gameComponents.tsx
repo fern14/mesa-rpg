@@ -291,6 +291,9 @@ export function DicePanel({
             maxLength={4}
           />
         </View>
+        <Text style={styles.fine}>
+          O modificador respeita o máximo da rolagem: 1d20 até 20, 2d20 até 40.
+        </Text>
         <Field
           label="O que está em jogo? (opcional)"
           value={label}

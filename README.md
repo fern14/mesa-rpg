@@ -24,7 +24,7 @@ No iPhone, abra o link no Safari. É possível usar **Compartilhar → Adicionar
 - Um personagem por participante em cada mesa. Nome, descrição, equipamentos, HP, mana, defesa, força, agilidade, resistência, inteligência e percepção.
 - Jogador vê sua própria ficha e a edita até aprovação. Mestre vê e edita todas as fichas.
 - Dano/cura e gasto/recuperação de mana com limites. Veneno com dano e duração em rodadas; reaplicar substitui o anterior. Remoção manual e expiração automática ao avançar rodadas.
-- Dados d4, d6, d8, d10, d12, d20 e d100, quantidades e modificadores. Rolagens geradas no cliente para um grupo de amigos que confia entre si.
+- Dados d4, d6, d8, d10, d12, d20 e d100, quantidades e modificadores. O total com modificador é limitado ao máximo dos dados rolados: 1d20 até 20, 2d20 até 40. Rolagens geradas no cliente para um grupo de amigos que confia entre si.
 - Histórico público dos últimos 50 registros no Firebase, com horário do servidor. Modo local mantém 100.
 - Encerrar campanha bloqueia convites e alterações e mantém consulta.
 - Layout no PC com navegação lateral, fichas em grade e histórico ao lado. Navegação inferior no celular.

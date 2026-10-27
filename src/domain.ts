@@ -138,7 +138,10 @@ export function rollDice(
     quantity,
     modifier,
     values,
-    total: values.reduce((sum, n) => sum + n, modifier),
+    total: Math.min(
+      quantity * sides,
+      values.reduce((sum, n) => sum + n, modifier),
+    ),
     expression: `${quantity}d${sides}${modifier ? ` ${modifier > 0 ? '+' : '−'} ${Math.abs(modifier)}` : ''}`,
   };
 }

@@ -1,4 +1,18 @@
 import { test, expect } from '@playwright/test';
+test('modified roll stays within the maximum in the result and shared history', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Explorar mesa de demonstração' }).click();
+  await page.getByRole('button', { name: 'Dados', exact: true }).click();
+  await page.getByLabel('Modificador', { exact: true }).fill('999');
+  await page.getByLabel('O que está em jogo? (opcional)', { exact: true }).fill('Teste do limite');
+  await page.getByRole('button', { name: 'Rolar 1d20', exact: true }).click();
+  await expect(page.getByText('20', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Registro', exact: true }).click();
+  await expect(page.getByText(/^Teste do limite: 1d20 \+ 999 → \[\d+\] = 20$/)).toBeVisible();
+});
+
 test('demo: damage, poison, public roll, persistence and read-only campaign', async ({ page }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));

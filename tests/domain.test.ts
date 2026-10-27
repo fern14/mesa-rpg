@@ -39,7 +39,7 @@ test('poison expires normally even when HP has reached zero', () => {
 test('dice honor boundaries, quantity, and negative modifiers', () => {
   assert.deepEqual(rollDice(20, 2, -3, () => 0).values, [1, 1]);
   assert.equal(rollDice(20, 2, -3, () => 0).total, -1);
-  assert.equal(rollDice(100, 1, 2, () => 0.999999).total, 102);
+  assert.equal(rollDice(100, 1, 2, () => 0.999999).total, 100);
   for (const args of [
     [3, 1, 0],
     [20, 0, 0],
@@ -47,6 +47,20 @@ test('dice honor boundaries, quantity, and negative modifiers', () => {
     [20, 1.5, 0],
   ])
     assert.throws(() => rollDice(args[0], args[1], args[2]));
+});
+
+test('positive modifiers cannot exceed the maximum of the dice rolled', () => {
+  const example = rollDice(20, 1, 19, () => 0.2);
+  assert.deepEqual(example.values, [5]);
+  assert.equal(example.total, 20);
+  assert.equal(example.expression, '1d20 + 19');
+  assert.equal(rollDice(20, 1, 3, () => 0.2).total, 8);
+  assert.equal(rollDice(20, 1, 15, () => 0.2).total, 20);
+  for (const sides of [4, 6, 8, 10, 12, 20, 100]) {
+    assert.equal(rollDice(sides, 1, 999, () => 0.999999).total, sides);
+    assert.equal(rollDice(sides, 2, 999, () => 0.999999).total, 2 * sides);
+    assert.equal(rollDice(sides, 2, 0, () => 0.999999).total, 2 * sides);
+  }
 });
 test('empty inputs and invalid sheets are rejected before persistence', () => {
   for (const value of ['', ' ', 'abc', '1.5', Infinity, NaN])
