@@ -1,22 +1,57 @@
 {
   "name": "projeto-rpg",
-  "version": "1.0.0",
-  "main": "index.ts",
+  "version": "0.2.0",
+  "main": "expo-router/entry",
   "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~58.0.20",
+    "expo-clipboard": "~58.0.4",
+    "expo-constants": "~58.0.13",
+    "expo-crypto": "~58.0.7",
+    "expo-font": "~58.0.10",
+    "expo-linking": "~58.0.14",
+    "expo-router": "~58.0.27",
     "expo-status-bar": "~58.0.4",
+    "firebase": "^13.1.0",
     "react": "19.3.0",
-    "react-native": "0.88.0"
+    "react-dom": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-safe-area-context": "~5.10.1",
+    "react-native-screens": "~4.30.0",
+    "react-native-web": "^0.21.4"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^6.0.0",
+    "@playwright/test": "^1.64.1",
+    "@types/node": "^26.6.5",
     "@types/react": "~19.3.0",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~58.0.4",
+    "firebase-tools": "^15.34.1",
+    "prettier": "^3.9.10",
+    "tsx": "^4.23.15",
     "typescript": "~6.0.3"
   },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/domain.test.ts tests/invites.test.ts",
+    "test:rules": "node scripts/test-rules.mjs",
+    "test:ui": "playwright test",
+    "test:pages": "playwright test --config playwright.pages.config.ts",
+    "build:android:bundle": "expo export --platform android --output-dir artifacts/android-bundle",
+    "build:web": "node scripts/build-web.mjs",
+    "preview:web": "node scripts/preview-web.mjs",
+    "build:apk": "npx eas-cli@latest build --platform android --profile preview",
+    "lint": "expo lint",
+    "format": "prettier --write src tests scripts playwright.config.ts *.json README.md"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.6"
   },
   "private": true
 }

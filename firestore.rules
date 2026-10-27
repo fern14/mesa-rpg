@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function room(id) { return get(/databases/$(database)/documents/rooms/$(id)).data; }
+    function host(id) { return signedIn() && room(id).hostId == request.auth.uid; }
+    function member(id) { return signedIn() && exists(/databases/$(database)/documents/rooms/$(id)/members/$(request.auth.uid)); }
+    function open(id) { return room(id).closed == false; }
+    function bounded(n, lo, hi) { return n is int && n >= lo && n <= hi; }
+    function shortText(s, max) { return s is string && s.size() > 0 && s.size() <= max; }
+    // Collection-group query for the signed-in participant's own memberships.
+    // Existing APK memberships already contain this id; no campaign migration is needed.
+    match /{path=**}/members/{memberId} {
+      allow list: if signedIn() && resource.data.id == request.auth.uid;
+    }
+    function validCharacter(d, id) {
+      return d.keys().hasAll(['id','ownerId','ownerName','name','description','hp','maxHp','mana','maxMana','defense','attributes','poison','approved'])
+        && d.keys().hasOnly(['id','ownerId','ownerName','name','description','hp','maxHp','mana','maxMana','defense','attributes','poison','approved'])
+        && d.id == id && d.ownerId == id && shortText(d.ownerName, 40) && shortText(d.name, 60)
+        && d.description is string && d.description.size() <= 2000
+        && bounded(d.maxHp, 1, 9999) && bounded(d.hp, 0, d.maxHp)
+        && bounded(d.maxMana, 0, 9999) && bounded(d.mana, 0, d.maxMana) && bounded(d.defense, 0, 999)
+        && d.approved is bool && d.attributes is map
+        && d.attributes.keys().hasAll(['strength','agility','endurance','intelligence','perception'])
+        && d.attributes.keys().hasOnly(['strength','agility','endurance','intelligence','perception'])
+        && bounded(d.attributes.strength, -99, 999) && bounded(d.attributes.agility, -99, 999)
+        && bounded(d.attributes.endurance, -99, 999) && bounded(d.attributes.intelligence, -99, 999) && bounded(d.attributes.perception, -99, 999)
+        && (d.poison == null || (d.poison is map && d.poison.keys().hasAll(['damage','remaining'])
+          && d.poison.keys().hasOnly(['damage','remaining']) && bounded(d.poison.damage, 1, 999) && bounded(d.poison.remaining, 1, 99)));
+    }
+    match /invites/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn() && request.resource.data.keys().hasOnly(['roomId','hostId','active'])
+        && request.resource.data.hostId == request.auth.uid && request.resource.data.active == true
+        && getAfter(/databases/$(database)/documents/rooms/$(request.resource.data.roomId)).data.hostId == request.auth.uid
+        && getAfter(/databases/$(database)/documents/rooms/$(request.resource.data.roomId)).data.code == code;
+      allow update: if signedIn() && resource.data.hostId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active']) && request.resource.data.active == false;
+      allow delete: if false;
+    }
+    match /rooms/{roomId} {
+      allow read: if member(roomId);
+      allow create: if signedIn() && request.resource.data.keys().hasOnly(['id','name','hostId','code','round','closed'])
+        && request.resource.data.id == roomId && shortText(request.resource.data.name, 80)
+        && request.resource.data.hostId == request.auth.uid && shortText(request.resource.data.code, 24)
+        && request.resource.data.round == 1 && request.resource.data.closed == false;
+      allow update: if host(roomId) && open(roomId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['round','closed'])
+        && request.resource.data.closed is bool
+        && bounded(request.resource.data.round, resource.data.round, resource.data.round + 1);
+      allow delete: if false;
+      match /members/{uid} {
+        allow get: if signedIn() && (uid == request.auth.uid || member(roomId));
+        allow list: if member(roomId);
+        allow create: if signedIn() && uid == request.auth.uid
+          && request.resource.data.keys().hasOnly(['id','name','inviteCode']) && request.resource.data.id == uid
+          && shortText(request.resource.data.name, 40)
+          && getAfter(/databases/$(database)/documents/rooms/$(roomId)).data.closed == false
+          && getAfter(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.roomId == roomId
+          && getAfter(/databases/$(database)/documents/invites/$(request.resource.data.inviteCode)).data.active == true;
+        allow update, delete: if false;
+      }
+      match /characters/{characterId} {
+        allow get: if member(roomId) && (host(roomId) || characterId == request.auth.uid);
+        allow list: if member(roomId) && (host(roomId) || resource.data.ownerId == request.auth.uid);
+        allow create: if member(roomId) && open(roomId) && validCharacter(request.resource.data, characterId)
+          && (host(roomId) || (characterId == request.auth.uid && request.resource.data.approved == false && request.resource.data.poison == null));
+        allow update: if member(roomId) && open(roomId) && validCharacter(request.resource.data, characterId)
+          && request.resource.data.ownerId == resource.data.ownerId
+          && (host(roomId) || (resource.data.ownerId == request.auth.uid && resource.data.approved == false
+            && request.resource.data.approved == false && request.resource.data.poison == resource.data.poison));
+        allow delete: if false;
+      }
+      match /events/{eventId} {
+        allow read: if member(roomId);
+        allow create: if member(roomId) && open(roomId)
+          && request.resource.data.keys().hasOnly(['id','actorId','actor','kind','text','createdAt'])
+          && request.resource.data.id == eventId && request.resource.data.actorId == request.auth.uid
+          && request.resource.data.actor == get(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid)).data.name
+          && request.resource.data.kind in ['roll','change','round'] && shortText(request.resource.data.text, 2000)
+          && request.resource.data.createdAt == request.time
+          && (host(roomId) || request.resource.data.kind != 'round');
+        allow update, delete: if false;
+      }
+    }
+  }
+}

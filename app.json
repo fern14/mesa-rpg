@@ -1,17 +1,24 @@
 {
   "expo": {
-    "name": "projeto-rpg",
-    "slug": "projeto-rpg",
-    "version": "1.0.0",
+    "name": "Mesa RPG",
+    "slug": "mesa-rpg",
+    "scheme": "mesarpg",
+    "version": "0.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "package": "com.mesarpg.app",
+      "versionCode": 2,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#0d1612",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -20,6 +27,17 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "3b17fbdb-c850-41b6-a929-7d575f1074a4"
+      }
+    },
+    "owner": "davidscrem111"
   }
 }
